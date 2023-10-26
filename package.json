@@ -1,4 +1,5 @@
 {
+  "homepage" : ".",
   "scripts": {
     "deploy": "gh-pages -d dist"
   },
