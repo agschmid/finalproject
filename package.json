@@ -1,6 +1,5 @@
-{
-  "homepage" : ".",
-  "scripts": {
+{  "scripts": {
+    "predeploy": "npx vite build --base=finalproject",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
