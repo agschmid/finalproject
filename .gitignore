@@ -131,3 +131,5 @@ dist
 .vscode/settings.json
 localhost.key
 localhost.pem
+
+resources/

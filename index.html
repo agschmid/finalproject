@@ -2,15 +2,17 @@
 <html>
 	<head lang="en">
 		<meta charset="utf-8">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=VT323">
 		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
-		</style>
+		<link rel="stylesheet" href="./style.css">
 		<script type="module" src="./js/main.js"></script>
 	</head>
 	<body>
-		<div id="log"></div>
-		<button id="shoot" style="height:50px; margin-left:50px">Shoot</button>
-		<button id="accelPermsButton" style="height:50px;">Start Accelerometer</button>
+		<canvas id="mainCanvas"></canvas>
+		<div id="menu">
+			<div id="log"></div>
+			<button id="shoot" style="height:50px; margin-left:50px">SHOOT</button>
+			<button id="accelPermsButton" style="height:50px;">ACCELEROMETER</button>
+		</div>
 	</body>
 </html>

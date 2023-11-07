@@ -7,7 +7,9 @@ scene.background = new THREE.Color( 0xbfe3dd );
 
 const camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 5000 );
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+var canvas = document.querySelector("#mainCanvas");
+
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 
@@ -112,27 +114,24 @@ function animate() {
 
 }
 
+let control = 'mouse'
+
+
 function getAccel(){
     DeviceMotionEvent.requestPermission().then(response => {
+        control="accel"
         if (response == 'granted') {
             // Add a listener to get smartphone orientation 
            // in the alpha-beta-gamma axes (units in degrees)
             window.addEventListener('deviceorientation',(event) => {
                 // Expose each orientation angle in a more readable way
-
-
-
                 let rotation_degrees = event.alpha;
                 let frontToBack_degrees = event.beta;
                 let leftToRight_degrees = event.gamma;
 
-
-
                 // Update velocity according to how tilted the phone is
-                // Since phones are narrower than they are long, double the increase to the x velocity
-                vx = vx + leftToRight_degrees * updateRate*2; 
+                vx = vx + leftToRight_degrees * updateRate; 
                 vy = vy + frontToBack_degrees * updateRate;
-                
 
                 // Update position and clip it to bounds
                 px = px + vx*.01;
@@ -146,21 +145,55 @@ function getAccel(){
                     py = Math.max(-2, Math.min(2, py)) // Clip py between 0-98
                     vy = 0;
                 }
+                
+            });
+        }
+    });
+}
 
-                sx = sx - svx*0.1;
-                if (sx > 2 || sx < -2){ 
-                    sx = Math.max(-2, Math.min(2, sx)) // Clip px between 0-98
-                    svx = -svx;
-                }
+let mouseX = 0
+let mouseY = 0
+let mouseXChange = 0
+let mouseYChange = 0
 
-                sy = sy - svy*0.1;
-                if (sy > 2 || sy < -2){
-                    sy = Math.max(-2, Math.min(2, sy)) // Clip py between 0-98
-                    svy = -svy;
-                }
+document.addEventListener("mousemove", (event) => {
+    mouseXChange = event.screenX-mouseX;
+    mouseYChange = event.screenY-mouseY;
+    mouseX = event.screenX
+    mouseY = event.screenY
+})
 
+// https://woodenraft.games/blog/how-to-implement-consistent-frame-rate-threejs
 
-                sz = sz+0.1*svz*zMult
+function gameLoop() {
+    if (control=="mouse"){
+        // Update position and clip it to bounds
+        px = px + mouseXChange*.005;
+        if (px > 2 || px < -2){ 
+            px = Math.max(-2, Math.min(2, px)) // Clip px between 0-98
+            mouseXChange=0
+        }
+
+        py = py - mouseYChange*.005;
+        if (py > 2 || py < -2){
+            py = Math.max(-2, Math.min(2, py)) // Clip py between 0-98
+            mouseYChange = 0
+        }
+    }
+    
+    sx = sx - svx*0.1;
+    if (sx > 2 || sx < -2){ 
+        sx = Math.max(-2, Math.min(2, sx)) // Clip px between 0-98
+        svx = -svx;
+    }
+
+    sy = sy - svy*0.1;
+    if (sy > 2 || sy < -2){
+        sy = Math.max(-2, Math.min(2, sy)) // Clip py between 0-98
+        svy = -svy;
+    }
+
+    sz = sz+0.1*svz*zMult
 
                 if (playing){
                     if (sz < -10){
@@ -193,14 +226,57 @@ function getAccel(){
                             
                     }
     
-
                 }
-            });
-        }
-    });
 }
 
+const fpsCap = createFpsCap( gameLoop, 60 );
 
+function onAnimationFrame( time ) {
+    fpsCap.loop( time );
+    requestAnimationFrame( onAnimationFrame );
+}
+
+requestAnimationFrame( onAnimationFrame );
+
+
+function createFpsCap(loop, fps = 60) {
+    let targetFps = 0, fpsInterval = 0;
+    let lastTime = 0, lastOverTime = 0, prevOverTime = 0, deltaTime = 0;
+  
+    function updateFps(value) {
+      targetFps = value;
+      fpsInterval = 1000 / targetFps;
+    }
+  
+    updateFps(fps);
+  
+    return {
+      // the targeted frame rate
+      get fps() {
+        return targetFps;
+      },
+      set fps(value) {
+        updateFps(value);
+      },
+  
+      // the frame-capped loop function
+      loop: function(time) {
+        deltaTime = time - lastTime;
+  
+        if(deltaTime < fpsInterval) {
+          return;
+        }
+  
+        prevOverTime = lastOverTime;
+        lastOverTime = deltaTime % fpsInterval;
+        lastTime = time - lastOverTime;
+  
+        deltaTime -= prevOverTime;
+  
+        return loop(deltaTime);
+      },
+    };
+  }
 
 // https://stackoverflow.com/questions/47639413/algorithm-for-accurate-detection-of-overlap-between-a-square-and-a-circle
 function didPaddleHit(a, b){
